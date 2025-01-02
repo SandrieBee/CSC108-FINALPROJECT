@@ -9,21 +9,30 @@ import sys
 import cv2
 import time
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller."""
+    # If running as a PyInstaller bundle
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    # If running in a development environment
+    return os.path.join(os.path.abspath("."), relative_path)
 
-if getattr(sys, 'frozen', False):  # Running as an executable
-    BASE_DIR = os.path.dirname(sys.executable)
-else:  # Running as a script
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Determine the base directory based on execution context
+if getattr(sys, 'frozen', False):  # Check if running as an executable
+    BASE_DIR = sys._MEIPASS  # PyInstaller's temporary directory
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Script's directory
 
-MODEL_PATH = os.path.join(BASE_DIR, "models", "yolov5s.pt")
-UTILS_PATH = os.path.join(BASE_DIR, "utils", "general.py")
+# Define paths to resources
+MODEL_PATH = resource_path("models/yolov5s.pt")
+UTILS_PATH = resource_path("utils/general.py")
 
 # Debugging: Print resolved paths
 print(f"BASE_DIR: {BASE_DIR}")
 print(f"MODEL_PATH: {MODEL_PATH}")
 print(f"UTILS_PATH: {UTILS_PATH}")
 
-# Check if the model exists
+# Check if the model file exists
 if not os.path.exists(MODEL_PATH):
     print(f"Model not found at {MODEL_PATH}")
 else:
@@ -41,7 +50,7 @@ cancel_image_detection = threading.Event()
 video_capture = cv2.VideoCapture(0)
 
 
-class ObjectDetectionApp:
+class ImageObjectDetectionApp:
     def __init__(self, app):
         self.app = app
         self.cancel_button = None
@@ -269,15 +278,14 @@ class ObjectDetectionApp:
         self.update_result_label("Running live detection... Press 'End' to stop.")
     
     def show_cancel_button(self, command):
-        """dsplay a cancel button"""
+        print("Creating cancel button...")
         self.cancel_button = ctk.CTkButton(
-            self.app, text="Cancel", command=command, width=100, height=30, fg_color="red", hover_color="#C82333", text_color="white"
+            self.app, text="Cancel", command=command, width=100, height=30, fg_color="red"
         )
         self.cancel_button.pack(pady=10)
 
     def hide_cancel_button(self):
-        """hide cancel button"""
-        if self.cancel_button:
+        if self.cancel_button and self.cancel_button.winfo_exists():
             print("Destroying cancel button...")
             self.cancel_button.destroy()
             self.cancel_button = None
@@ -316,5 +324,5 @@ class ObjectDetectionApp:
 # Initialize the app
 if __name__ == "__main__":
     app = ctk.CTk()
-    ObjectDetectionApp(app)
+    ImageObjectDetectionApp(app)
     app.mainloop()
