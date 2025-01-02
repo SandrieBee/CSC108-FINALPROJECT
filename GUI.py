@@ -61,7 +61,9 @@ class ImageObjectDetectionApp:
         self.setup_gui()
 
     def setup_gui(self):
-        """Setup GUI components."""
+        
+        """Setting up GUI components"""
+        
         self.app.title("IMAGE AND OBJECT RECOGNITION")
         self.app.geometry("600x700")
         ctk.set_appearance_mode("Dark")
@@ -74,12 +76,11 @@ class ImageObjectDetectionApp:
             text_color="#FFFFFF" 
         )
         header_label.pack(pady=(20, 15)) 
-
       
         # Button font with bold styling
         button_font = ctk.CTkFont(size=16, weight="bold")
 
-      
+        #for image detection button
         image_button = ctk.CTkButton(
             self.app,  
             text="Upload Image to Detect",
@@ -96,7 +97,7 @@ class ImageObjectDetectionApp:
         )
         image_button.pack(pady=20)
 
-   
+        #for live cam button
         live_button = ctk.CTkButton(
             self.app,
             text="Live Camera Detection",
@@ -110,12 +111,11 @@ class ImageObjectDetectionApp:
             corner_radius=10,
         )
         live_button.pack(pady=20)
-
        
         self.image_label = ctk.CTkLabel(self.app, text="", width=500, height=300, corner_radius=20, fg_color="white")
         self.image_label.pack(pady=20)
 
-        # Result label for displaying the detection outcome
+        #result label for displaying detected images
         self.result_label = ctk.CTkLabel(
             self.app, 
             text="Detection Result: None", 
@@ -126,20 +126,20 @@ class ImageObjectDetectionApp:
 
     def detect_image(self):
         """handle image detection"""
-    # Reset flags and ensure clean state
+    #resets flags & ensure clean state
         cancel_image_detection.clear()
         stop_flag.clear()
         stop_live_detection.clear()
 
         def process_image_detection(file_path):
             try:
-                # Debugging: Check file path
+                #debugging: checks file path if naa
                 print(f"Processing image: {file_path}")
 
-                # Run YOLOv5 detection on the selected image
+                #run yolov5 detection on selected image
                 run(
                     source=file_path,
-                    weights=MODEL_PATH,  # Use dynamic model path
+                    weights=MODEL_PATH,
                     conf_thres=0.25,
                     iou_thres=0.45,
                     nosave=False,
@@ -151,12 +151,12 @@ class ImageObjectDetectionApp:
                     exist_ok=True,
                 )
 
-                #if detection is canceled, stop further processing
+                #if detection is canceled, stop further process
                 if cancel_image_detection.is_set():
                     self.update_result_label("Image detection canceled.")
                     return
 
-                #Debug: Check result image path
+                #debug: check result image path
                 result_image_path = os.path.join(BASE_DIR, "runs", "detect", "image_results", Path(file_path).name)
                 print(f"Result image path: {result_image_path}")
 
@@ -198,7 +198,7 @@ class ImageObjectDetectionApp:
             try:
                 run(
                     source=0,
-                    weights=MODEL_PATH,  # Use dynamic path
+                    weights=MODEL_PATH,
                     view_img=True,
                     nosave=True,
                 )
@@ -214,6 +214,7 @@ class ImageObjectDetectionApp:
                 self.update_result_label("Live detection stopped.")
 
         def end_live_feed():
+            
             """Stop live feed and clean up resources."""
             #signal to stop live detection
             try:
@@ -278,6 +279,7 @@ class ImageObjectDetectionApp:
         self.update_result_label("Running live detection... Press 'End' to stop.")
     
     def show_cancel_button(self, command):
+        
         print("Creating cancel button...")
         self.cancel_button = ctk.CTkButton(
             self.app, text="Cancel", command=command, width=100, height=30, fg_color="red"
@@ -285,6 +287,7 @@ class ImageObjectDetectionApp:
         self.cancel_button.pack(pady=10)
 
     def hide_cancel_button(self):
+        
         if self.cancel_button and self.cancel_button.winfo_exists():
             print("Destroying cancel button...")
             self.cancel_button.destroy()
@@ -293,6 +296,7 @@ class ImageObjectDetectionApp:
             print("Cancel button already destroyed or not initialized.")
 
     def show_control_buttons(self, end_command):
+        
         """display control buttons for live detection"""
         self.end_button = ctk.CTkButton(
             self.app,
@@ -307,19 +311,19 @@ class ImageObjectDetectionApp:
         self.end_button.pack(pady=10)
 
     def hide_control_buttons(self):
+        
         """hide control buttons"""
         if self.end_button:
             self.end_button.destroy()
             self.end_button = None
 
     def update_result_label(self, text):
+        
         """update result label"""
         if self.result_label and self.result_label.winfo_exists():
             self.result_label.configure(text=text)
         else:
             print("Result label does not exist.")
-            
-
 
 # Initialize the app
 if __name__ == "__main__":
