@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div align="center">
   <p>
     <a href="https://www.ultralytics.com/events/yolovision" target="_blank">
@@ -468,3 +469,7 @@ For YOLOv5 bug reports and feature requests please visit [GitHub Issues](https:/
 </div>
 
 [tta]: https://docs.ultralytics.com/yolov5/tutorials/test_time_augmentation
+=======
+# CSC108-FINALPROJECT
+CSC 108: FINAL PROJECT (IMAGE AND OBJECT RECOGNITION)
+>>>>>>> 15ac2022c9fef671ac4a1f3198f1c00c9c863a2d
