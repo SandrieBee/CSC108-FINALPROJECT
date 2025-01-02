@@ -33,15 +33,38 @@ import csv
 import os
 import platform
 import sys
+import threading
 from pathlib import Path
 
 import torch
 
-FILE = Path(__file__).resolve()
+
+#FILE = Path(__file__).resolve()
+#ROOT = FILE.parents[0]  # YOLOv5 root directory
+#if str(ROOT) not in sys.path:
+#    sys.path.append(str(ROOT))  # add ROOT to PATH
+#ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  
+#stop_flag = threading.Event()
+if getattr(sys, 'frozen', False):  # If running as an executable
+    FILE = Path(sys.executable).resolve()
+else:  # If running as a script
+    FILE = Path(__file__).resolve()
+
 ROOT = FILE.parents[0]  # YOLOv5 root directory
+
+# Ensure ROOT is added to the Python path
 if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))  # add ROOT to PATH
-ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+    sys.path.append(str(ROOT))  # Add ROOT to PATH
+
+# Use ROOT directly (absolute path)
+stop_flag = threading.Event()
+
+if hasattr(sys, "_MEIPASS"):
+    base_path = sys._MEIPASS
+else:
+    base_path = os.path.dirname(os.path.abspath(__file__))
+
+file_path = os.path.join(base_path, "BasePath.txt")
 
 from ultralytics.utils.plotting import Annotator, colors, save_one_box
 
@@ -183,6 +206,11 @@ def run(
     model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup
     seen, windows, dt = 0, [], (Profile(device=device), Profile(device=device), Profile(device=device))
     for path, im, im0s, vid_cap, s in dataset:
+        
+        if stop_flag.is_set():
+            print("Stopping live detection...")
+            break
+        
         with dt[0]:
             im = torch.from_numpy(im).to(model.device)
             im = im.half() if model.fp16 else im.float()  # uint8 to fp16/32
