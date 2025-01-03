@@ -10,41 +10,41 @@ import cv2
 import time
 
 def resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller."""
-    # If running as a PyInstaller bundle
+ 
+    #if running as a PyInstaller bundle
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
-    # If running in a development environment
+    #if running in a development environment
     return os.path.join(os.path.abspath("."), relative_path)
 
-# Determine the base directory based on execution context
-if getattr(sys, 'frozen', False):  # Check if running as an executable
-    BASE_DIR = sys._MEIPASS  # PyInstaller's temporary directory
+#determine the base directory based on execution context
+if getattr(sys, 'frozen', False):  #check if running as an executable
+    BASE_DIR = sys._MEIPASS  #PyInstaller's temporary directory
 else:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Script's directory
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #Script's directory
 
-# Define paths to resources
+#define paths to resources
 MODEL_PATH = resource_path("models/yolov5s.pt")
 UTILS_PATH = resource_path("utils/general.py")
 
-# Debugging: Print resolved paths
+#debugging: Print resolved paths
 print(f"BASE_DIR: {BASE_DIR}")
 print(f"MODEL_PATH: {MODEL_PATH}")
 print(f"UTILS_PATH: {UTILS_PATH}")
 
-# Check if the model file exists
+#check if the model file exists
 if not os.path.exists(MODEL_PATH):
     print(f"Model not found at {MODEL_PATH}")
 else:
     print("Model file found!")
 
-# Check if the utils file exists
+#check if the utils file exists
 if not os.path.exists(UTILS_PATH):
     print(f"Utils file not found at {UTILS_PATH}")
 else:
     print("Utils file found!")
 
-# Global variables
+#global variables
 stop_live_detection = threading.Event()
 cancel_image_detection = threading.Event()
 video_capture = cv2.VideoCapture(0)
@@ -138,17 +138,17 @@ class ImageObjectDetectionApp:
 
                 #run yolov5 detection on selected image
                 run(
-                    source=file_path,
-                    weights=MODEL_PATH,
-                    conf_thres=0.25,
-                    iou_thres=0.45,
-                    nosave=False,
-                    save_txt=False,
-                    save_conf=False,
-                    view_img=False,
-                    project=os.path.join(BASE_DIR, "runs", "detect"),
-                    name="image_results",
-                    exist_ok=True,
+                    source=file_path,       #file path to the image
+                    weights=MODEL_PATH,     #path to the model weights file
+                    conf_thres=0.25,        #confidence threshold for the image/object detection
+                    iou_thres=0.45,         #intersection over Union (IoU) threshold for non-max suppression (NMS) to avoid duplicate detections
+                    nosave=False,           #to not save frames or images in memory
+                    save_txt=False,         #to avoid saving detection results in text format (e.g., labels and coordinates)
+                    save_conf=False,        #to avoid saving detection confidence values along with the results
+                    view_img=False,          #to avoid displaying the processed image with the detection results on screen
+                    project=os.path.join(BASE_DIR, "runs", "detect"),  #a directory where the results will be saved
+                    name="image_results",       #the subdirectory inside the project directory where the results will be stored
+                    exist_ok=True,              #allows overwriting existing results in the target directory; if false, will raise an error if directory exists
                 )
 
                 #if detection is canceled, stop further process
@@ -162,18 +162,18 @@ class ImageObjectDetectionApp:
 
                 #load & display the resulting image
                 if os.path.exists(result_image_path):
-                    img = Image.open(result_image_path).resize((600, 400))
-                    img_tk = ImageTk.PhotoImage(img)
-                    self.app.after(0, lambda: self.image_label.configure(image=img_tk))
-                    self.app.after(0, lambda: setattr(self.image_label, "image", img_tk))
-                    self.update_result_label("Detection complete. Results displayed.")
+                    img = Image.open(result_image_path).resize((600, 400))  #opens the image and resizes it
+                    img_tk = ImageTk.PhotoImage(img)       #this converts the PIL image to a TkImage
+                    self.app.after(0, lambda: self.image_label.configure(image=img_tk))   #this updates the image label w/ the new image (displays image w/ its results)
+                    self.app.after(0, lambda: setattr(self.image_label, "image", img_tk))  #this keeps a reference to the image
+                    self.update_result_label("Detection complete. Results displayed.")     #this updates the result label 
                 else:
-                    self.update_result_label("Error: Result image not found.")
+                    self.update_result_label("Error: Result image not found.")   #if image file doesn't exist, this updates result label with an error message
             except Exception as e:
                 self.update_result_label(f"Error during detection: {e}")
                 print(f"Error during detection: {e}")
             finally:
-                self.app.after(0, self.hide_cancel_button)
+                self.app.after(0, self.hide_cancel_button)  #this hides the cancel button even if there's an error
 
         #stop image detection
         def stop_image_detection():
@@ -182,11 +182,13 @@ class ImageObjectDetectionApp:
             self.update_result_label("Image detection canceled.")
 
         #open file dialog to select img
-        file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpeg;*.jpg;*.png")])
+        file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpeg;*.jpg;*.png")]) #only shows files with .jpeg, .jpg, or .png extensions.
+        
         if file_path:
-            threading.Thread(target=process_image_detection, args=(file_path,)).start()
+            threading.Thread(target=process_image_detection, args=(file_path,)).start() #starts a new thread to process the image detection function 
             self.show_cancel_button(stop_image_detection)
             self.update_result_label("Detecting image... Press 'Cancel' to stop.")
+        
         else:
             self.update_result_label("No image selected.")
 
@@ -195,14 +197,14 @@ class ImageObjectDetectionApp:
         stop_live_detection.clear()
 
         def process_live_feed():
-            try:
+            try: 
                 run(
-                    source=0,
-                    weights=MODEL_PATH,
-                    view_img=True,
-                    nosave=True,
+                    source = 0,             #uses webcam for live detection
+                    weights = MODEL_PATH,   #path to the model weights
+                    view_img = True,        #displays hte processed video frames
+                    nosave = True,          #to not save frames or images in memory
                 )
-                while not stop_live_detection.is_set():
+                while not stop_live_detection.is_set(): #keeps running the live detection until we press the stop live detection button
                     if cv2.waitKey(1) & 0xFF == ord("q"):
                         break
 
@@ -221,7 +223,9 @@ class ImageObjectDetectionApp:
                 stop_live_detection.set()
                 stop_flag.set()
                 print("Stop flags set successfully.")
+            
             except NameError as e:
+               
                 print(f"Error setting stop flags: {e}")
                 return
 
@@ -229,10 +233,13 @@ class ImageObjectDetectionApp:
             try:
                 for t in threading.enumerate():
                     print(f"Active thread: {t.name}")
-                    if t.name.startswith("Thread"):  # Flexible thread matching
+                    
+                    if t.name.startswith("Thread"): 
                         print(f"Joining thread: {t.name}")
-                        t.join(timeout=1)  # Adjust timeout if needed
+                        t.join(timeout = 1 ) 
+               
                 print("All threads joined.")
+           
             except Exception as e:
                 print(f"Error joining threads: {e}")
 
@@ -242,6 +249,7 @@ class ImageObjectDetectionApp:
                     video_capture.release()
                     time.sleep(1)  # Allow the OS to fully release the webcam
                     print("Webcam released successfully.")
+                    
                 else:
                     print("No video capture object to release.")
             except Exception as e:
